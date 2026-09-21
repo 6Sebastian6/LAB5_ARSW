@@ -49,11 +49,27 @@ const slice = createSlice({
         s.status = 'failed'
         s.error = a.error.message
       })
+      .addCase(fetchByAuthor.pending, (s) => {
+        s.status = 'loading'
+        s.error = null
+      })
       .addCase(fetchByAuthor.fulfilled, (s, a) => {
-        s.byAuthor[a.payload.author] = a.payload.items
+        s.status = 'succeeded'
+        // Defensa extra: si por algun motivo no llega un array, no rompemos la UI
+        s.byAuthor[a.payload.author] = Array.isArray(a.payload.items) ? a.payload.items : []
+      })
+      .addCase(fetchByAuthor.rejected, (s, a) => {
+        s.status = 'failed'
+        s.error = a.error.message
+        // Autor sin resultados (404) o error de red: dejamos la lista vacia, no undefined
+        s.byAuthor[a.meta.arg] = []
       })
       .addCase(fetchBlueprint.fulfilled, (s, a) => {
         s.current = a.payload
+      })
+      .addCase(fetchBlueprint.rejected, (s, a) => {
+        s.status = 'failed'
+        s.error = a.error.message
       })
       .addCase(createBlueprint.fulfilled, (s, a) => {
         const bp = a.payload

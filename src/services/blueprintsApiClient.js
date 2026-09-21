@@ -1,26 +1,34 @@
 // Este se conecta al real que estara en el lab4 y tendra (getAll, getByAuthor,getByAuthorAndName, create)
+// blueprintsApiClient.js
+// Servicio "real": misma interfaz que apimock.js (getAll, getByAuthor,
+// getByAuthorAndName, create), pero habla con el backend real via Axios.
+// La instancia de axios (con baseURL e interceptores JWT) vive en apiClient.js.
+
 import api from './apiClient.js'
 
+// El backend real envuelve TODA respuesta en ApiResponse<T> = { code, message, data }.
+// Por eso aqui sacamos .data.data (el .data de axios, y adentro el .data del wrapper).
+
 async function getAll() {
-  const { data } = await api.get('/blueprints')
-  return data
+  const { data } = await api.get('/api/v1/blueprints')
+  return data.data
 }
 
 async function getByAuthor(author) {
-  const { data } = await api.get(`/blueprints/${encodeURIComponent(author)}`)
-  return data
+  const { data } = await api.get(`/api/v1/blueprints/${encodeURIComponent(author)}`)
+  return data.data
 }
 
 async function getByAuthorAndName(author, name) {
   const { data } = await api.get(
-    `/blueprints/${encodeURIComponent(author)}/${encodeURIComponent(name)}`,
+    `/api/v1/blueprints/${encodeURIComponent(author)}/${encodeURIComponent(name)}`,
   )
-  return data
+  return data.data
 }
 
 async function create(payload) {
-  const { data } = await api.post('/blueprints', payload)
-  return data
+  const { data } = await api.post('/api/v1/blueprints', payload)
+  return data.data
 }
 
 export default { getAll, getByAuthor, getByAuthorAndName, create }
