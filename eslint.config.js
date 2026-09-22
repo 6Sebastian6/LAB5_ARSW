@@ -1,10 +1,15 @@
 // eslint.config.js (Flat Config para ESLint v9)
+import js from '@eslint/js'
 import globals from 'globals'
 import pluginReact from 'eslint-plugin-react'
 
 export default [
   // Ignorar carpetas de build y dependencias
-  { ignores: ['dist/**', 'build/**', 'node_modules/**'] },
+  { ignores: ['dist/**', 'build/**', 'node_modules/**', 'coverage/**'] },
+
+  // Reglas recomendadas: variables no usadas, imports rotos, JSX mal formado, etc.
+  js.configs.recommended,
+  pluginReact.configs.flat.recommended,
 
   // Reglas para el código de la app
   {
