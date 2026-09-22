@@ -20,4 +20,31 @@ describe('BlueprintForm', () => {
       points: [{ x: 1, y: 2 }],
     })
   })
+
+  it('con JSON inválido muestra el error y no envía', () => {
+    const onSubmit = vi.fn()
+    render(<BlueprintForm onSubmit={onSubmit} />)
+
+    fireEvent.change(screen.getByLabelText(/Puntos/i), { target: { value: '[{x:1' } })
+    fireEvent.submit(screen.getByText(/Guardar/i))
+
+    expect(screen.getByRole('alert')).toHaveTextContent('JSON de puntos inválido')
+    expect(onSubmit).not.toHaveBeenCalled()
+  })
+
+  it('exige que los puntos sean un arreglo', () => {
+    const onSubmit = vi.fn()
+    render(<BlueprintForm onSubmit={onSubmit} />)
+
+    fireEvent.change(screen.getByLabelText(/Puntos/i), { target: { value: '{"x":1,"y":2}' } })
+    fireEvent.submit(screen.getByText(/Guardar/i))
+
+    expect(screen.getByRole('alert')).toHaveTextContent(/arreglo/)
+    expect(onSubmit).not.toHaveBeenCalled()
+  })
+
+  it('mientras guarda deshabilita el botón', () => {
+    render(<BlueprintForm onSubmit={vi.fn()} submitting />)
+    expect(screen.getByRole('button', { name: 'Guardando...' })).toBeDisabled()
+  })
 })
