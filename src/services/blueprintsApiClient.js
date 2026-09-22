@@ -15,8 +15,15 @@ async function getAll() {
 }
 
 async function getByAuthor(author) {
-  const { data } = await api.get(`/api/v1/blueprints/${encodeURIComponent(author)}`)
-  return data.data
+  try {
+    const { data } = await api.get(`/api/v1/blueprints/${encodeURIComponent(author)}`)
+    return data.data
+  } catch (err) {
+    // El backend responde 404 cuando el autor no tiene planos; el mock devuelve [].
+    // Mantenemos la misma interfaz: "sin planos" no es un error.
+    if (err.response?.status === 404) return []
+    throw err
+  }
 }
 
 async function getByAuthorAndName(author, name) {

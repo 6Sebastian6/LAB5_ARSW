@@ -6,13 +6,17 @@ import {
   fetchBlueprint,
 } from '../features/blueprints/blueprintsSlice.js'
 import BlueprintCanvas from '../components/BlueprintCanvas.jsx'
+import ErrorBanner from '../components/ErrorBanner.jsx'
 
 export default function BlueprintsPage() {
   const dispatch = useDispatch()
-  const { byAuthor, current, status } = useSelector((s) => s.blueprints)
+  const { authors, byAuthor, current, status, error } = useSelector((s) => s.blueprints)
   const [authorInput, setAuthorInput] = useState('')
   const [selectedAuthor, setSelectedAuthor] = useState('')
+  const [lastOpened, setLastOpened] = useState(null)
   const items = byAuthor[selectedAuthor] || []
+  const listLoading = status.byAuthor === 'loading'
+  const listFailed = status.byAuthor === 'failed'
 
   useEffect(() => {
     dispatch(fetchAuthors())
@@ -24,39 +28,73 @@ export default function BlueprintsPage() {
   )
 
   const getBlueprints = () => {
-    if (!authorInput) return
-    setSelectedAuthor(authorInput)
-    dispatch(fetchByAuthor(authorInput))
+    const author = authorInput.trim()
+    if (!author) return
+    setSelectedAuthor(author)
+    dispatch(fetchByAuthor(author))
   }
 
   const openBlueprint = (bp) => {
-    dispatch(fetchBlueprint({ author: bp.author, name: bp.name }))
+    const ref = { author: bp.author, name: bp.name }
+    setLastOpened(ref)
+    dispatch(fetchBlueprint(ref))
   }
 
   return (
     <div className="grid" style={{ gridTemplateColumns: '1.1fr 1.4fr', gap: 24 }}>
-      <section className="grid" style={{ gap: 16 }}>
+      <section className="grid" style={{ gap: 16, alignContent: 'start' }}>
         <div className="card">
           <h2 style={{ marginTop: 0 }}>Blueprints</h2>
-          <div style={{ display: 'flex', gap: 12 }}>
+          <ErrorBanner
+            message={error.authors && `No se pudieron cargar los autores: ${error.authors}`}
+            onRetry={() => dispatch(fetchAuthors())}
+          />
+          <form
+            style={{ display: 'flex', gap: 12 }}
+            onSubmit={(e) => {
+              e.preventDefault()
+              getBlueprints()
+            }}
+          >
             <input
               className="input"
               placeholder="Author"
+              aria-label="Author"
+              list="authors-list"
               value={authorInput}
               onChange={(e) => setAuthorInput(e.target.value)}
             />
-            <button className="btn primary" onClick={getBlueprints}>
-              Get blueprints
+            <datalist id="authors-list">
+              {authors.map((a) => (
+                <option key={a} value={a} />
+              ))}
+            </datalist>
+            <button className="btn primary" disabled={listLoading}>
+              {listLoading ? 'Cargando...' : 'Get blueprints'}
             </button>
-          </div>
+          </form>
         </div>
 
         <div className="card">
           <h3 style={{ marginTop: 0 }}>
             {selectedAuthor ? `${selectedAuthor}'s blueprints:` : 'Results'}
           </h3>
-          {status === 'loading' && <p>Cargando...</p>}
-          {!items.length && status !== 'loading' && <p>Sin resultados.</p>}
+          {listFailed && (
+            <ErrorBanner
+              message={`No se pudieron cargar los planos: ${error.byAuthor}`}
+              onRetry={() => dispatch(fetchByAuthor(selectedAuthor))}
+            />
+          )}
+          {listLoading && (
+            <p className="muted" role="status">
+              Cargando planos de {selectedAuthor}...
+            </p>
+          )}
+          {!items.length && !listLoading && !listFailed && (
+            <p className="muted">
+              {selectedAuthor ? 'Sin resultados.' : 'Escribe un autor y presiona Get blueprints.'}
+            </p>
+          )}
           {!!items.length && (
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -115,6 +153,17 @@ export default function BlueprintsPage() {
 
       <section className="card">
         <h3 style={{ marginTop: 0 }}>Current blueprint: {current?.name || '—'}</h3>
+        {status.current === 'failed' && (
+          <ErrorBanner
+            message={`No se pudo abrir el plano: ${error.current}`}
+            onRetry={() => dispatch(fetchBlueprint(lastOpened))}
+          />
+        )}
+        {status.current === 'loading' && (
+          <p className="muted" role="status">
+            Cargando plano...
+          </p>
+        )}
         <BlueprintCanvas points={current?.points || []} />
       </section>
     </div>

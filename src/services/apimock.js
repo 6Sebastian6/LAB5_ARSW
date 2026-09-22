@@ -64,9 +64,7 @@ async function getByAuthorAndName(author, name) {
 }
 
 async function create(payload) {
-  const exists = blueprints.some(
-    (bp) => bp.author === payload.author && bp.name === payload.name,
-  )
+  const exists = blueprints.some((bp) => bp.author === payload.author && bp.name === payload.name)
   if (exists) {
     const err = new Error(`Ya existe un blueprint '${payload.name}' de '${payload.author}' (mock)`)
     err.status = 409

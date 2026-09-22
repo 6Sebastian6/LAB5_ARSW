@@ -1,18 +1,26 @@
 import { useState } from 'react'
 
-export default function BlueprintForm({ onSubmit }) {
+export default function BlueprintForm({ onSubmit, submitting = false }) {
   const [author, setAuthor] = useState('')
   const [name, setName] = useState('')
   const [pointsJSON, setPointsJSON] = useState('[{"x":10,"y":10},{"x":40,"y":60}]')
+  const [error, setError] = useState(null)
 
   const handle = (e) => {
     e.preventDefault()
+    let points
     try {
-      const points = JSON.parse(pointsJSON)
-      onSubmit({ author, name, points })
-    } catch (e) {
-      alert('JSON de puntos inválido')
+      points = JSON.parse(pointsJSON)
+    } catch {
+      setError('JSON de puntos inválido')
+      return
     }
+    if (!Array.isArray(points)) {
+      setError('Los puntos deben ser un arreglo JSON, ej: [{"x":10,"y":10}]')
+      return
+    }
+    setError(null)
+    onSubmit({ author, name, points })
   }
 
   return (
@@ -20,35 +28,47 @@ export default function BlueprintForm({ onSubmit }) {
       <h3 style={{ marginTop: 0 }}>Crear Blueprint</h3>
       <div className="grid cols-2">
         <div>
-          <label>Autor</label>
+          <label htmlFor="bp-author">Autor</label>
           <input
+            id="bp-author"
             className="input"
             value={author}
             onChange={(e) => setAuthor(e.target.value)}
             placeholder="juan.perez"
+            required
           />
         </div>
         <div>
-          <label>Nombre</label>
+          <label htmlFor="bp-name">Nombre</label>
           <input
+            id="bp-name"
             className="input"
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="mi-dibujo"
+            required
           />
         </div>
       </div>
       <div style={{ marginTop: 12 }}>
-        <label>Puntos (JSON)</label>
+        <label htmlFor="bp-points">Puntos (JSON)</label>
         <textarea
+          id="bp-points"
           className="input"
           rows="5"
           value={pointsJSON}
           onChange={(e) => setPointsJSON(e.target.value)}
         />
       </div>
+      {error && (
+        <p className="field-error" role="alert">
+          {error}
+        </p>
+      )}
       <div style={{ marginTop: 12 }}>
-        <button className="btn primary">Guardar</button>
+        <button className="btn primary" disabled={submitting}>
+          {submitting ? 'Guardando...' : 'Guardar'}
+        </button>
       </div>
     </form>
   )
