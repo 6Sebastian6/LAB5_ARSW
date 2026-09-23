@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -177,6 +178,77 @@ public class BlueprintsAPIController {
                     .body(ApiResponse.notFound(e.getMessage()));
         }
     }
+
+    // PUT /blueprints/{author}/{bpname} 200 OK o 404 Not Found
+    @Operation(
+            summary = "Actualizar los puntos de un blueprint",
+            description = "Reemplaza la lista completa de puntos del blueprint indicado por autor y nombre."
+    )
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "Blueprint actualizado exitosamente",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ApiResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "404",
+                    description = "El blueprint indicado no existe",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ApiResponse.class)))
+    })
+    @PutMapping("/{author}/{bpname}")
+    @PreAuthorize("hasAuthority('SCOPE_blueprints.write')")
+    public ResponseEntity<ApiResponse<Blueprint>> update(
+            @Parameter(description = "Nombre del autor", required = true, example = "john")
+            @PathVariable String author,
+            @Parameter(description = "Nombre del blueprint", required = true, example = "house-plan")
+            @PathVariable String bpname,
+            @Valid @RequestBody UpdateBlueprintRequest req) {
+        try {
+            services.updateBlueprint(author, bpname, req.points());
+            return ResponseEntity.ok(ApiResponse.ok(new Blueprint(author, bpname, req.points())));
+        } catch (BlueprintNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.notFound(e.getMessage()));
+        }
+    }
+
+    // DELETE /blueprints/{author}/{bpname} 200 OK o 404 Not Found
+    @Operation(
+            summary = "Eliminar un blueprint",
+            description = "Elimina el blueprint indicado por autor y nombre junto con sus puntos."
+    )
+    @ApiResponses(value = {
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "Blueprint eliminado exitosamente",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ApiResponse.class))),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "404",
+                    description = "El blueprint indicado no existe",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ApiResponse.class)))
+    })
+    @DeleteMapping("/{author}/{bpname}")
+    @PreAuthorize("hasAuthority('SCOPE_blueprints.write')")
+    public ResponseEntity<ApiResponse<Void>> delete(
+            @Parameter(description = "Nombre del autor", required = true, example = "john")
+            @PathVariable String author,
+            @Parameter(description = "Nombre del blueprint", required = true, example = "house-plan")
+            @PathVariable String bpname) {
+        try {
+            services.deleteBlueprint(author, bpname);
+            return ResponseEntity.ok(ApiResponse.ok(null));
+        } catch (BlueprintNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.notFound(e.getMessage()));
+        }
+    }
+
+    public record UpdateBlueprintRequest(
+            @NotNull @Valid java.util.List<Point> points
+    ) { }
 
     public record NewBlueprintRequest(
             @NotBlank String author,

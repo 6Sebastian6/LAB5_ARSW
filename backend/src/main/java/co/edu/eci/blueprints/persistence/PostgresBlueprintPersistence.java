@@ -7,8 +7,10 @@ import co.edu.eci.blueprints.persistence.entity.BlueprintJpaRepository;
 import co.edu.eci.blueprints.persistence.entity.PointEntity;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -63,6 +65,29 @@ public class PostgresBlueprintPersistence implements BlueprintPersistence {
                         "Blueprint not found: %s/%s".formatted(author, name)));
         entity.addPoint(new PointEntity(x, y));
         repo.save(entity);
+    }
+
+    // Reemplaza todos los puntos; orphanRemoval borra de la tabla los que quedan fuera
+    @Override
+    @Transactional
+    public void updateBlueprint(String author, String name, List<Point> points) throws BlueprintNotFoundException {
+        BlueprintEntity entity = repo.findByAuthorAndName(author, name)
+                .orElseThrow(() -> new BlueprintNotFoundException(
+                        "Blueprint not found: %s/%s".formatted(author, name)));
+        entity.getPoints().clear();
+        for (Point p : points) {
+            entity.addPoint(new PointEntity(p.x(), p.y()));
+        }
+        repo.save(entity);
+    }
+
+    @Override
+    @Transactional
+    public void deleteBlueprint(String author, String name) throws BlueprintNotFoundException {
+        BlueprintEntity entity = repo.findByAuthorAndName(author, name)
+                .orElseThrow(() -> new BlueprintNotFoundException(
+                        "Blueprint not found: %s/%s".formatted(author, name)));
+        repo.delete(entity);
     }
 
     //Mapeo entre modelo de dominio y JPA
