@@ -90,7 +90,7 @@ export default function BlueprintsPage() {
                 <option key={a} value={a} />
               ))}
             </datalist>
-            <button className="btn primary" disabled={listLoading}>
+            <button type="submit" className="btn primary" disabled={listLoading}>
               {listLoading ? 'Cargando...' : 'Get blueprints'}
             </button>
           </form>
@@ -108,8 +108,8 @@ export default function BlueprintsPage() {
           )}
           <ErrorBanner message={removeError} />
           {listLoading && (
-            <p className="muted" role="status">
-              Cargando planos de {selectedAuthor}...
+            <p className="muted">
+              <output>Cargando planos de {selectedAuthor}...</output>
             </p>
           )}
           {!items.length && !listLoading && !listFailed && (
@@ -212,8 +212,8 @@ export default function BlueprintsPage() {
           />
         )}
         {status.current === 'loading' && (
-          <p className="muted" role="status">
-            Cargando plano...
+          <p className="muted">
+            <output>Cargando plano...</output>
           </p>
         )}
         <BlueprintCanvas points={current?.points || []} />

@@ -57,7 +57,7 @@ export default function LoginPage() {
           {error}
         </p>
       )}
-      <button className="btn primary" style={{ marginTop: 12 }} disabled={loading}>
+      <button type="submit" className="btn primary" style={{ marginTop: 12 }} disabled={loading}>
         {loading ? 'Ingresando...' : 'Ingresar'}
       </button>
     </form>
