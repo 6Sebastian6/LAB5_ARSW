@@ -66,7 +66,7 @@ export default function BlueprintForm({ onSubmit, submitting = false }) {
         </p>
       )}
       <div style={{ marginTop: 12 }}>
-        <button className="btn primary" disabled={submitting}>
+        <button type="submit" className="btn primary" disabled={submitting}>
           {submitting ? 'Guardando...' : 'Guardar'}
         </button>
       </div>
