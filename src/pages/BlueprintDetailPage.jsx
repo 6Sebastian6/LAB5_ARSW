@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { fetchBlueprint } from '../features/blueprints/blueprintsSlice.js'
 import BlueprintCanvas from '../components/BlueprintCanvas.jsx'
 import ErrorBanner from '../components/ErrorBanner.jsx'
@@ -43,6 +43,14 @@ export default function BlueprintDetailPage() {
         <strong>Puntos:</strong> {bp.points?.length || 0}
       </p>
       <BlueprintCanvas points={bp.points || []} />
+      <div style={{ marginTop: 12 }}>
+        <Link
+          className="btn primary"
+          to={`/blueprints/${encodeURIComponent(bp.author)}/${encodeURIComponent(bp.name)}/edit`}
+        >
+          Editar
+        </Link>
+      </div>
     </div>
   )
 }

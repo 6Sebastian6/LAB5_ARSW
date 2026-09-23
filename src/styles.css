@@ -39,6 +39,12 @@ a {
   background: #1f2937;
   color: inherit;
   cursor: pointer;
+  display: inline-block;
+  font-size: 0.9rem;
+}
+.btn.danger {
+  border-color: #7f1d1d;
+  color: #fca5a5;
 }
 .btn:disabled {
   opacity: 0.6;
