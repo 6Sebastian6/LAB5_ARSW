@@ -57,7 +57,10 @@ const fail = (s, key, a) => {
 const isSame = (author, name) => (bp) => bp.author === author && bp.name === name
 
 // Lista de planos del autor, creandola si aun no existe
-const listOf = (byAuthor, author) => (byAuthor[author] ??= [])
+const listOf = (byAuthor, author) => {
+  byAuthor[author] ??= []
+  return byAuthor[author]
+}
 
 // Reemplaza el plano (mismo autor y nombre) en la lista de su autor y en `current`
 const replaceBlueprint = (s, bp) => {

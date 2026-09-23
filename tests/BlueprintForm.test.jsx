@@ -50,7 +50,7 @@ describe('BlueprintForm', () => {
     canvas.getBoundingClientRect = () => ({ left: 0, top: 0, width: 520, height: 360 })
     const json = screen.getByLabelText(/Puntos/i)
 
-    fireEvent.click(canvas, { clientX: 100, clientY: 50 })
+    fireEvent.click(canvas, { detail: 1, clientX: 100, clientY: 50 })
     expect(json).toHaveValue('[{"x":10,"y":10},{"x":40,"y":60},{"x":100,"y":50}]')
 
     fireEvent.click(screen.getByRole('button', { name: 'Deshacer punto' }))
@@ -59,7 +59,7 @@ describe('BlueprintForm', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Limpiar' }))
     expect(json).toHaveValue('[]')
 
-    fireEvent.click(canvas, { clientX: 7, clientY: 8 })
+    fireEvent.click(canvas, { detail: 1, clientX: 7, clientY: 8 })
     fireEvent.change(screen.getByLabelText(/Autor/i), { target: { value: 'john' } })
     fireEvent.change(screen.getByLabelText(/Nombre/i), { target: { value: 'dibujo' } })
     fireEvent.submit(screen.getByText(/Guardar/i))

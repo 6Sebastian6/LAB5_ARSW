@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import BlueprintCanvas from '../src/components/BlueprintCanvas.jsx'
 
 describe('BlueprintCanvas', () => {
@@ -62,8 +62,22 @@ describe('BlueprintCanvas', () => {
     // En pantalla el CSS lo muestra a la mitad (260x180) y desplazado
     canvas.getBoundingClientRect = () => ({ left: 10, top: 20, width: 260, height: 180 })
 
-    fireEvent.click(canvas, { clientX: 10 + 130, clientY: 20 + 45 })
+    fireEvent.click(canvas, { detail: 1, clientX: 10 + 130, clientY: 20 + 45 })
 
     expect(onAddPoint).toHaveBeenCalledWith({ x: 260, y: 90 })
+  })
+
+  it('con teclado (Enter/Espacio sobre el botón) agrega un punto en el centro', () => {
+    const onAddPoint = vi.fn()
+    render(<BlueprintCanvas onAddPoint={onAddPoint} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Agregar un punto al plano' }))
+
+    expect(onAddPoint).toHaveBeenCalledWith({ x: 260, y: 180 })
+  })
+
+  it('sin onAddPoint el canvas no es interactivo', () => {
+    render(<BlueprintCanvas />)
+    expect(screen.queryByRole('button')).not.toBeInTheDocument()
   })
 })

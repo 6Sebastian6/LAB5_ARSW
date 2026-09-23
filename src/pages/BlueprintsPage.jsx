@@ -48,14 +48,16 @@ export default function BlueprintsPage() {
   }
 
   // Optimista: la fila desaparece de una vez y el slice la devuelve si el DELETE falla
-  const deleteBlueprint = async (bp) => {
+  const deleteBlueprint = (bp) => {
     if (!window.confirm(`¿Eliminar el plano "${bp.name}" de ${bp.author}?`)) return
     setRemoveError(null)
-    try {
-      await dispatch(removeBlueprint({ author: bp.author, name: bp.name })).unwrap()
-    } catch (err) {
-      setRemoveError(`No se pudo eliminar "${bp.name}": ${err.message}. Se restauró en la lista.`)
-    }
+    dispatch(removeBlueprint({ author: bp.author, name: bp.name }))
+      .unwrap()
+      .catch((err) =>
+        setRemoveError(
+          `No se pudo eliminar "${bp.name}": ${err.message}. Se restauró en la lista.`,
+        ),
+      )
   }
 
   const editPath = (bp) =>
@@ -166,13 +168,17 @@ export default function BlueprintsPage() {
                         }}
                       >
                         <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
-                          <button className="btn" onClick={() => openBlueprint(bp)}>
+                          <button type="button" className="btn" onClick={() => openBlueprint(bp)}>
                             Open
                           </button>
                           <Link className="btn" to={editPath(bp)}>
                             Edit
                           </Link>
-                          <button className="btn danger" onClick={() => deleteBlueprint(bp)}>
+                          <button
+                            type="button"
+                            className="btn danger"
+                            onClick={() => deleteBlueprint(bp)}
+                          >
                             Delete
                           </button>
                         </div>

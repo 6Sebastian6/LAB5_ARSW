@@ -164,7 +164,11 @@ describe('BlueprintsPage', () => {
     vi.spyOn(window, 'confirm').mockReturnValue(true)
     service.getByAuthor.mockResolvedValue([house, garage])
     let failDelete
-    service.remove.mockReturnValue(new Promise((_, reject) => (failDelete = reject)))
+    service.remove.mockReturnValue(
+      new Promise((_, reject) => {
+        failDelete = reject
+      }),
+    )
     renderPage()
     searchAuthor('JohnConnor')
     await screen.findByRole('cell', { name: 'house' })

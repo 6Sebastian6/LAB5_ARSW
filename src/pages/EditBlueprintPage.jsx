@@ -41,8 +41,8 @@ export default function EditBlueprintPage() {
   if (!bp)
     return (
       <div className="card">
-        <p className="muted" role="status">
-          Cargando...
+        <p className="muted">
+          <output>Cargando...</output>
         </p>
       </div>
     )

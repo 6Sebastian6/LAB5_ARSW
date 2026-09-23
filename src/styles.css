@@ -42,6 +42,14 @@ a {
   display: inline-block;
   font-size: 0.9rem;
 }
+.canvas-input {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: crosshair;
+}
 .btn.danger {
   border-color: #7f1d1d;
   color: #fca5a5;
