@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render } from '@testing-library/react'
+import { render, fireEvent } from '@testing-library/react'
 import BlueprintCanvas from '../src/components/BlueprintCanvas.jsx'
 
 describe('BlueprintCanvas', () => {
@@ -53,5 +53,17 @@ describe('BlueprintCanvas', () => {
     expect(ctx.arc).toHaveBeenCalledTimes(3)
     expect(ctx.arc).toHaveBeenCalledWith(90, 20, 4, 0, Math.PI * 2)
     spy.mockRestore()
+  })
+
+  it('con onAddPoint convierte el clic a coordenadas internas del lienzo', () => {
+    const onAddPoint = vi.fn()
+    const { container } = render(<BlueprintCanvas onAddPoint={onAddPoint} />)
+    const canvas = container.querySelector('canvas')
+    // En pantalla el CSS lo muestra a la mitad (260x180) y desplazado
+    canvas.getBoundingClientRect = () => ({ left: 10, top: 20, width: 260, height: 180 })
+
+    fireEvent.click(canvas, { clientX: 10 + 130, clientY: 20 + 45 })
+
+    expect(onAddPoint).toHaveBeenCalledWith({ x: 260, y: 90 })
   })
 })

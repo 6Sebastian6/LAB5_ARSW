@@ -15,6 +15,8 @@ vi.mock('../src/services/blueprintsService.js', () => ({
     getByAuthor: vi.fn(),
     getByAuthorAndName: vi.fn(),
     create: vi.fn(),
+    update: vi.fn(),
+    remove: vi.fn(),
   },
 }))
 
@@ -27,6 +29,7 @@ function renderApp(path) {
       </MemoryRouter>
     </Provider>,
   )
+  return store
 }
 
 function fillLogin(username, password) {
@@ -110,5 +113,59 @@ describe('Crear blueprint (ruta protegida)', () => {
       'No se pudo crear el plano: Blueprint already exists',
     )
     expect(screen.getByRole('heading', { name: 'Crear Blueprint' })).toBeInTheDocument()
+  })
+})
+
+describe('Editar blueprint (ruta protegida, PUT optimista)', () => {
+  const bp = { author: 'john', name: 'house', points: [{ x: 1, y: 2 }] }
+  const nuevos = [
+    { x: 1, y: 2 },
+    { x: 3, y: 4 },
+  ]
+
+  beforeEach(() => {
+    localStorage.clear()
+    vi.resetAllMocks()
+  })
+
+  function saveNewPoints() {
+    fireEvent.change(screen.getByLabelText(/Puntos/), { target: { value: JSON.stringify(nuevos) } })
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar' }))
+  }
+
+  it('sin token, editar redirige al login', () => {
+    renderApp('/blueprints/john/house/edit')
+    expect(screen.getByRole('heading', { name: 'Login' })).toBeInTheDocument()
+    expect(service.getByAuthorAndName).not.toHaveBeenCalled()
+  })
+
+  it('con token carga el plano, envía el PUT y vuelve al detalle', async () => {
+    localStorage.setItem('token', 'jwt-123')
+    service.getByAuthorAndName.mockResolvedValue(bp)
+    service.update.mockImplementation(async (author, name, points) => ({ author, name, points }))
+    renderApp('/blueprints/john/house/edit')
+
+    expect(await screen.findByRole('heading', { name: 'Editar Blueprint' })).toBeInTheDocument()
+    saveNewPoints()
+
+    expect(await screen.findByRole('heading', { name: 'house' })).toBeInTheDocument()
+    expect(service.update).toHaveBeenCalledWith('john', 'house', nuevos)
+  })
+
+  it('si el PUT falla muestra el banner y revierte los puntos en el estado', async () => {
+    localStorage.setItem('token', 'jwt-123')
+    service.getByAuthorAndName.mockResolvedValue(bp)
+    service.update.mockRejectedValue(new Error('No autorizado'))
+    const store = renderApp('/blueprints/john/house/edit')
+
+    await screen.findByRole('heading', { name: 'Editar Blueprint' })
+    saveNewPoints()
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'No se pudo guardar el plano: No autorizado. Se restauraron los puntos anteriores.',
+    )
+    expect(store.getState().blueprints.current.points).toEqual(bp.points)
+    // lo dibujado se conserva en el formulario para poder reintentar
+    expect(screen.getByLabelText(/Puntos/)).toHaveValue(JSON.stringify(nuevos))
   })
 })

@@ -1,6 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, within, waitFor } from '@testing-library/react'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { render, screen, fireEvent, within, waitFor, act } from '@testing-library/react'
 import { Provider } from 'react-redux'
+import { MemoryRouter } from 'react-router-dom'
 import { configureStore } from '@reduxjs/toolkit'
 import reducer from '../src/features/blueprints/blueprintsSlice.js'
 import service from '../src/services/blueprintsService.js'
@@ -13,6 +14,8 @@ vi.mock('../src/services/blueprintsService.js', () => ({
     getByAuthor: vi.fn(),
     getByAuthorAndName: vi.fn(),
     create: vi.fn(),
+    update: vi.fn(),
+    remove: vi.fn(),
   },
 }))
 
@@ -31,7 +34,9 @@ function renderPage() {
   const store = configureStore({ reducer: { blueprints: reducer } })
   render(
     <Provider store={store}>
-      <BlueprintsPage />
+      <MemoryRouter>
+        <BlueprintsPage />
+      </MemoryRouter>
     </Provider>,
   )
   return store
@@ -42,11 +47,15 @@ function searchAuthor(author) {
   fireEvent.click(screen.getByRole('button', { name: /Get blueprints/i }))
 }
 
+const rowOf = (name) => screen.getByRole('cell', { name }).closest('tr')
+
 describe('BlueprintsPage', () => {
   beforeEach(() => {
     vi.resetAllMocks()
     service.getAll.mockResolvedValue([house, garage])
   })
+
+  afterEach(() => vi.restoreAllMocks())
 
   it('despacha fetchByAuthor al hacer click en Get blueprints y pinta la tabla', async () => {
     service.getByAuthor.mockResolvedValue([house, garage])
@@ -124,16 +133,66 @@ describe('BlueprintsPage', () => {
     expect(service.getByAuthorAndName).toHaveBeenLastCalledWith('JohnConnor', 'house')
   })
 
-  it('si falla cargar los autores muestra el banner con Reintentar', async () => {
+  it('si falla cargar el catálogo muestra el banner con Reintentar', async () => {
     service.getAll.mockReset()
     service.getAll.mockRejectedValueOnce(new Error('No autorizado')).mockResolvedValueOnce([house])
     renderPage()
 
     const banner = await screen.findByRole('alert')
-    expect(banner).toHaveTextContent('No se pudieron cargar los autores: No autorizado')
+    expect(banner).toHaveTextContent('No se pudo cargar el catálogo de planos: No autorizado')
     fireEvent.click(within(banner).getByRole('button', { name: 'Reintentar' }))
 
     await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument())
     expect(service.getAll).toHaveBeenCalledTimes(2)
+  })
+
+  it('muestra el top-5 por número de puntos derivado del catálogo', async () => {
+    const pts = (n) => Array.from({ length: n }, (_, i) => ({ x: i, y: i }))
+    service.getAll.mockResolvedValue(
+      Array.from({ length: 7 }, (_, i) => ({ author: 'ana', name: `bp${i}`, points: pts(i) })),
+    )
+    renderPage()
+
+    const top = await screen.findByRole('list', { name: 'Top 5 blueprints' })
+    const items = within(top).getAllByRole('listitem')
+    expect(items).toHaveLength(5)
+    expect(items[0]).toHaveTextContent('bp6')
+    expect(items[4]).toHaveTextContent('bp2')
+  })
+
+  it('Delete quita la fila al instante y la restaura si el backend falla', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+    service.getByAuthor.mockResolvedValue([house, garage])
+    let failDelete
+    service.remove.mockReturnValue(new Promise((_, reject) => (failDelete = reject)))
+    renderPage()
+    searchAuthor('JohnConnor')
+    await screen.findByRole('cell', { name: 'house' })
+
+    fireEvent.click(within(rowOf('house')).getByRole('button', { name: 'Delete' }))
+
+    // optimista: desaparece antes de que el backend responda
+    expect(screen.queryByRole('cell', { name: 'house' })).not.toBeInTheDocument()
+    expect(service.remove).toHaveBeenCalledWith('JohnConnor', 'house')
+
+    await act(async () => failDelete(new Error('No autorizado')))
+
+    expect(await screen.findByRole('cell', { name: 'house' })).toBeInTheDocument()
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      'No se pudo eliminar "house": No autorizado',
+    )
+  })
+
+  it('Delete no hace nada si el usuario cancela la confirmación', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(false)
+    service.getByAuthor.mockResolvedValue([house])
+    renderPage()
+    searchAuthor('JohnConnor')
+    await screen.findByRole('cell', { name: 'house' })
+
+    fireEvent.click(within(rowOf('house')).getByRole('button', { name: 'Delete' }))
+
+    expect(service.remove).not.toHaveBeenCalled()
+    expect(screen.getByRole('cell', { name: 'house' })).toBeInTheDocument()
   })
 })
