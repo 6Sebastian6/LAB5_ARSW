@@ -38,8 +38,7 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // Permite que el front del Lab 5 (Vite) llame al API desde el navegador.
-    // Patron localhost:* porque Vite cambia de puerto (5173, 5174...) si el 5173 esta ocupado.
+    // localhost:* porque Vite cambia de puerto si el 5173 esta ocupado
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();

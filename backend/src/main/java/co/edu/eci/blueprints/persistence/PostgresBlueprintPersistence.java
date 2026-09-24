@@ -67,7 +67,6 @@ public class PostgresBlueprintPersistence implements BlueprintPersistence {
         repo.save(entity);
     }
 
-    // Reemplaza todos los puntos; orphanRemoval borra de la tabla los que quedan fuera
     @Override
     @Transactional
     public void updateBlueprint(String author, String name, List<Point> points) throws BlueprintNotFoundException {
