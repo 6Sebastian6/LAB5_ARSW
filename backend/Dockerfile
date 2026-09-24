@@ -18,9 +18,11 @@ RUN mvn -B -DskipTests package
 # Runtime image
 FROM eclipse-temurin:21-jre
 WORKDIR /app
+RUN groupadd --system app && useradd --system --gid app --no-create-home app
 
 # Copy the built jar (wildcard to match typical jar names)
 COPY --from=build /app/target/*.jar ./app.jar
+USER app
 
 # Update if your app listens on a different port
 EXPOSE 8080

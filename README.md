@@ -35,16 +35,12 @@ Configura la URL base en `.env`.
 El backend del Lab 4 está copiado en [`backend/`](./backend) (origen: `6Sebastian6/LAB4_ARSW@b8dbe33`), con los endpoints `PUT`/`DELETE` y el CORS que necesita este cliente. Desde esa carpeta:
 
 ```bash
-docker compose up -d   # PostgreSQL 16 en el puerto 5432
+cp .env.example .env   # define DB_PASSWORD (y DB_PORT si el 5432 está ocupado)
+docker compose up -d   # PostgreSQL 16
 mvn spring-boot:run    # API en http://localhost:8080
 ```
 
-Si el 5432 ya está ocupado, levanta la base en otro puerto y pásale la URL a Spring (en PowerShell el `-D...` va entre comillas):
-
-```bash
-docker run -d --name blueprints-db -e POSTGRES_USER=blueprints -e POSTGRES_PASSWORD=blueprints -e POSTGRES_DB=blueprintsdb -p 127.0.0.1:55432:5432 postgres:16
-mvn spring-boot:run "-Dspring-boot.run.arguments=--spring.datasource.url=jdbc:postgresql://localhost:55432/blueprintsdb"
-```
+`compose.yml` y Spring leen el mismo `backend/.env` (no se versiona), así que las credenciales no quedan en el repositorio.
 
 Usuario de prueba: `student` / `student123`.
 
