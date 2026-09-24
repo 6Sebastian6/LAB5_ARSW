@@ -11,20 +11,42 @@
 
 ## Requisitos previos
 
-- Tener corriendo el backend de Blueprints de los **Labs 3 y 4** (APIs + seguridad).
+- Tener corriendo el backend de Blueprints de los **Labs 3 y 4** (APIs + seguridad). Está incluido en [`backend/`](./backend).
 - Node.js 18+ y npm.
+- Para el backend: JDK 21, Maven 3.9+ y Docker.
 
 Ver la especificación de glosario clave, consulta las [Definiciones del laboratorio](./DEFINICIONES.md).
 
 ## Endpoints esperados (ajústalos si tu backend quedo diferente)
 
-- `GET /api/blueprints` → lista general o catálogo para derivar autores.
-- `GET /api/blueprints/{author}`
-- `GET /api/blueprints/{author}/{name}`
-- `POST /api/blueprints` (requiere JWT)
-- `POST /api/auth/login` → `{ token }`
+- `GET /api/v1/blueprints` → lista general o catálogo para derivar autores.
+- `GET /api/v1/blueprints/{author}`
+- `GET /api/v1/blueprints/{author}/{name}`
+- `POST /api/v1/blueprints` (requiere JWT)
+- `PUT /api/v1/blueprints/{author}/{name}` y `DELETE /api/v1/blueprints/{author}/{name}` (requieren JWT)
+- `POST /auth/login` → `{ access_token }`
+
+Todas las rutas `/api/**` exigen JWT (scope `blueprints.read` o `blueprints.write`).
 
 Configura la URL base en `.env`.
+
+## Backend (Lab 4 incluido)
+
+El backend del Lab 4 está copiado en [`backend/`](./backend) (origen: `6Sebastian6/LAB4_ARSW@b8dbe33`), con los endpoints `PUT`/`DELETE` y el CORS que necesita este cliente. Desde esa carpeta:
+
+```bash
+docker compose up -d   # PostgreSQL 16 en el puerto 5432
+mvn spring-boot:run    # API en http://localhost:8080
+```
+
+Si el 5432 ya está ocupado, levanta la base en otro puerto y pásale la URL a Spring (en PowerShell el `-D...` va entre comillas):
+
+```bash
+docker run -d --name blueprints-db -e POSTGRES_USER=blueprints -e POSTGRES_PASSWORD=blueprints -e POSTGRES_DB=blueprintsdb -p 127.0.0.1:55432:5432 postgres:16
+mvn spring-boot:run "-Dspring-boot.run.arguments=--spring.datasource.url=jdbc:postgresql://localhost:55432/blueprintsdb"
+```
+
+Usuario de prueba: `student` / `student123`.
 
 ## Cómo arrancar
 
@@ -42,8 +64,11 @@ Abre `http://localhost:5173`
 Crea un archivo `.env` en la raíz:
 
 ```variable
-VITE_API_BASE_URL=http://localhost:8080/api
+VITE_API_BASE_URL=http://localhost:8080
+VITE_USE_MOCK=false
 ```
+
+`VITE_USE_MOCK=true` usa datos en memoria (`apimock.js`) y no necesita backend.
 
 > **Tip:** en producción usa variables seguras o un _reverse proxy_.
 
@@ -59,6 +84,7 @@ blueprints-react-lab/
 │  ├─ store/index.js          # Redux Toolkit
 │  ├─ App.jsx, main.jsx, styles.css
 ├─ tests/
+├─ backend/                   # API del Lab 4 (Spring Boot + JWT + PostgreSQL)
 ├─ .github/workflows/ci.yml
 ├─ index.html, package.json, vite.config.js, README.md
 ```
