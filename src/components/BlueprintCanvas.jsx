@@ -1,7 +1,20 @@
 import { useEffect, useRef } from 'react'
 
-export default function BlueprintCanvas({ points = [], width = 520, height = 360 }) {
+export default function BlueprintCanvas({ points = [], width = 520, height = 360, onAddPoint }) {
   const ref = useRef(null)
+
+  // El canvas se escala con CSS (width: 100%), asi que el click se pasa a coordenadas internas
+  const handleClick = (e) => {
+    if (e.detail === 0) {
+      onAddPoint({ x: Math.round(width / 2), y: Math.round(height / 2) })
+      return
+    }
+    const rect = ref.current.getBoundingClientRect()
+    onAddPoint({
+      x: Math.round(((e.clientX - rect.left) * width) / rect.width),
+      y: Math.round(((e.clientY - rect.top) * height) / rect.height),
+    })
+  }
 
   useEffect(() => {
     const canvas = ref.current
@@ -43,12 +56,14 @@ export default function BlueprintCanvas({ points = [], width = 520, height = 360
     }
   }, [points])
 
-  return (
+  const canvas = (
     <canvas
+      id="blueprint-canvas"
       ref={ref}
       width={width}
       height={height}
       style={{
+        display: 'block',
         background: '#0b1220',
         border: '1px solid #334155',
         borderRadius: 12,
@@ -56,5 +71,19 @@ export default function BlueprintCanvas({ points = [], width = 520, height = 360
         maxWidth: width,
       }}
     />
+  )
+
+  if (!onAddPoint) return canvas
+
+  return (
+    <button
+      type="button"
+      className="canvas-input"
+      style={{ maxWidth: width }}
+      aria-label="Agregar un punto al plano"
+      onClick={handleClick}
+    >
+      {canvas}
+    </button>
   )
 }

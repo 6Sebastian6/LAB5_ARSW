@@ -1,4 +1,4 @@
-//Simula las 4 operaciones que pasarab eb ek backend real,
+//Simula las operaciones que pasaran en el backend real,
 //Datos semilla
 let blueprints = [
   {
@@ -64,9 +64,7 @@ async function getByAuthorAndName(author, name) {
 }
 
 async function create(payload) {
-  const exists = blueprints.some(
-    (bp) => bp.author === payload.author && bp.name === payload.name,
-  )
+  const exists = blueprints.some((bp) => bp.author === payload.author && bp.name === payload.name)
   if (exists) {
     const err = new Error(`Ya existe un blueprint '${payload.name}' de '${payload.author}' (mock)`)
     err.status = 409
@@ -77,4 +75,16 @@ async function create(payload) {
   return created
 }
 
-export default { getAll, getByAuthor, getByAuthorAndName, create }
+async function update(author, name, points) {
+  await getByAuthorAndName(author, name) // lanza 404 si no existe
+  const updated = { author, name, points }
+  blueprints = blueprints.map((bp) => (bp.author === author && bp.name === name ? updated : bp))
+  return updated
+}
+
+async function remove(author, name) {
+  await getByAuthorAndName(author, name) // lanza 404 si no existe
+  blueprints = blueprints.filter((bp) => !(bp.author === author && bp.name === name))
+}
+
+export default { getAll, getByAuthor, getByAuthorAndName, create, update, remove }

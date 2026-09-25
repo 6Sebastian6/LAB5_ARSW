@@ -15,8 +15,15 @@ async function getAll() {
 }
 
 async function getByAuthor(author) {
-  const { data } = await api.get(`/api/v1/blueprints/${encodeURIComponent(author)}`)
-  return data.data
+  try {
+    const { data } = await api.get(`/api/v1/blueprints/${encodeURIComponent(author)}`)
+    return data.data
+  } catch (err) {
+    // El backend responde 404 cuando el autor no tiene planos; el mock devuelve [].
+    // Mantenemos la misma interfaz: "sin planos" no es un error.
+    if (err.response?.status === 404) return []
+    throw err
+  }
 }
 
 async function getByAuthorAndName(author, name) {
@@ -31,4 +38,17 @@ async function create(payload) {
   return data.data
 }
 
-export default { getAll, getByAuthor, getByAuthorAndName, create }
+// PUT reemplaza la lista completa de puntos (el autor y el nombre van en la URL)
+async function update(author, name, points) {
+  const { data } = await api.put(
+    `/api/v1/blueprints/${encodeURIComponent(author)}/${encodeURIComponent(name)}`,
+    { points },
+  )
+  return data.data
+}
+
+async function remove(author, name) {
+  await api.delete(`/api/v1/blueprints/${encodeURIComponent(author)}/${encodeURIComponent(name)}`)
+}
+
+export default { getAll, getByAuthor, getByAuthorAndName, create, update, remove }

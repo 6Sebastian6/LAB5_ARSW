@@ -37,7 +37,26 @@ a {
   border-radius: 10px;
   border: 1px solid #334155;
   background: #1f2937;
+  color: inherit;
   cursor: pointer;
+  display: inline-block;
+  font-size: 0.9rem;
+}
+.canvas-input {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: crosshair;
+}
+.btn.danger {
+  border-color: #7f1d1d;
+  color: #fca5a5;
+}
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 .btn.primary {
   background: #2563eb;
@@ -76,4 +95,24 @@ nav a {
 }
 nav a.active {
   background: #334155;
+}
+.muted {
+  color: #94a3b8;
+}
+.field-error {
+  color: #f87171;
+}
+.banner {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  border-radius: 10px;
+}
+.banner.error {
+  background: #3f1d1d;
+  border: 1px solid #f87171;
+  color: #fecaca;
 }
